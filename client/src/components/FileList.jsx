@@ -90,7 +90,7 @@ const FileList = ({ refreshTrigger }) => {
       if (activeFilter === 'All') return true;
 
       const ext = file.name.split('.').pop()?.toLowerCase();
-      
+
       if (activeFilter === 'Images') {
         return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext);
       }
@@ -107,7 +107,7 @@ const FileList = ({ refreshTrigger }) => {
   }, [files, searchQuery, activeFilter, visibilityFilter]);
 
   const handleDownload = async (file) => {
-    setActionInProgress(file.name);
+    setActionInProgress({ name: file.name, type: 'download' });
     const toastId = toast.loading(`Generating link for ${file.name}...`);
 
     try {
@@ -127,7 +127,7 @@ const FileList = ({ refreshTrigger }) => {
   const handleDelete = async (file) => {
     if (!window.confirm(`Are you sure you want to delete ${file.name}?`)) return;
 
-    setActionInProgress(file.name);
+    setActionInProgress({ name: file.name, type: 'delete' });
     const toastId = toast.loading(`Deleting ${file.name}...`);
 
     try {
@@ -150,7 +150,7 @@ const FileList = ({ refreshTrigger }) => {
 
   const handleTogglePublic = async (file) => {
     const action = file.isPublic ? 'unshare' : 'share';
-    setActionInProgress(file.name);
+    setActionInProgress({ name: file.name, type: 'share' });
     const toastId = toast.loading(`${action === 'share' ? 'Sharing' : 'Unsharing'} ${file.name}...`);
 
     try {
@@ -229,8 +229,8 @@ const FileList = ({ refreshTrigger }) => {
 
       {/* Enhanced Toolbar: Search, Categories, Visibility */}
       <div className="flex flex-col lg:flex-row items-center gap-4 mb-8">
-        {/* 1. Compact Search Bar */}
-        <div className="relative w-full lg:max-w-[280px]">
+        {/* 1. Big Search Bar */}
+        <div className="relative flex-grow min-w-[200px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
           <input
             type="text"
@@ -241,17 +241,16 @@ const FileList = ({ refreshTrigger }) => {
           />
         </div>
 
-        {/* 2. Category Filters (Flexible) */}
-        <div className="flex items-center gap-2 p-1 bg-white/5 rounded-xl border border-white/10 overflow-x-auto no-scrollbar flex-grow w-full lg:w-auto h-10">
+        {/* 2. Compact Category Filters */}
+        <div className="flex items-center gap-2 p-1 bg-white/5 rounded-xl border border-white/10 overflow-x-auto no-scrollbar h-10 w-auto shrink-0">
           {['All', 'Images', 'Documents', 'Others'].map((filter) => (
             <button
               key={filter}
               onClick={() => setActiveFilter(filter)}
-              className={`flex-1 sm:flex-initial px-4 h-full rounded-lg text-[10px] font-black uppercase tracking-wider transition-all whitespace-nowrap ${
-                activeFilter === filter
+              className={`px-4 h-full rounded-lg text-[10px] font-black uppercase tracking-wider transition-all whitespace-nowrap ${activeFilter === filter
                   ? 'bg-[#0ea5e9] text-white shadow-lg shadow-[#0ea5e9]/20'
                   : 'text-slate-400 hover:text-white hover:bg-white/5'
-              }`}
+                }`}
             >
               {filter}
             </button>
@@ -259,7 +258,7 @@ const FileList = ({ refreshTrigger }) => {
         </div>
 
         {/* 3. Visibility Selector */}
-        <CustomSelect 
+        <CustomSelect
           value={visibilityFilter}
           onChange={setVisibilityFilter}
           options={visibilityOptions}
@@ -363,14 +362,14 @@ const FileList = ({ refreshTrigger }) => {
                       <div className="flex items-center justify-end gap-3">
                         <button
                           onClick={() => handleTogglePublic(file)}
-                          disabled={actionInProgress === file.name}
+                          disabled={actionInProgress?.name === file.name}
                           className={`p-2.5 rounded-xl transition-all ${file.isPublic
                             ? 'bg-amber-500/10 text-amber-500 hover:bg-amber-500/20'
                             : 'bg-[#0ea5e9]/10 text-[#0ea5e9] hover:bg-[#0ea5e9]/20'
                             }`}
                           title={file.isPublic ? "Make Private" : "Make Public"}
                         >
-                          {actionInProgress === file.name ? (
+                          {actionInProgress?.name === file.name && actionInProgress?.type === 'share' ? (
                             <Loader2 className="w-4 h-4 animate-spin" />
                           ) : (
                             <Share2 className="w-4 h-4" />
@@ -378,19 +377,27 @@ const FileList = ({ refreshTrigger }) => {
                         </button>
                         <button
                           onClick={() => handleDownload(file)}
-                          disabled={actionInProgress === file.name}
+                          disabled={actionInProgress?.name === file.name}
                           className="p-2.5 bg-white/5 hover:bg-white/10 rounded-xl text-slate-300 transition-all"
                           title="Download"
                         >
-                          <Download className="w-4 h-4" />
+                          {actionInProgress?.name === file.name && actionInProgress?.type === 'download' ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Download className="w-4 h-4" />
+                          )}
                         </button>
                         <button
                           onClick={() => handleDelete(file)}
-                          disabled={actionInProgress === file.name}
+                          disabled={actionInProgress?.name === file.name}
                           className="p-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-xl transition-all"
                           title="Delete"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          {actionInProgress?.name === file.name && actionInProgress?.type === 'delete' ? (
+                            <Loader2 className="w-4 h-4 animate-spin text-red-500" />
+                          ) : (
+                            <Trash2 className="w-4 h-4" />
+                          )}
                         </button>
                       </div>
                     </td>

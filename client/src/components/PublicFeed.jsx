@@ -171,7 +171,7 @@ const PublicFeed = () => {
       </div>
 
       <div className="flex flex-col sm:flex-row gap-4 mb-8">
-        <div className="relative flex-grow">
+        <div className="relative flex-grow min-w-[240px]">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
           <input
             type="text"
@@ -182,14 +182,14 @@ const PublicFeed = () => {
           />
         </div>
 
-        <div className="flex items-center gap-2 p-1 bg-white/3 rounded-xl border border-white/10 shrink-0 overflow-x-auto no-scrollbar">
+        <div className="flex items-center gap-2 p-1 bg-white/3 rounded-xl border border-white/10 shrink-0 overflow-x-auto no-scrollbar w-auto">
           {['All', 'Images', 'Documents', 'Others'].map((filter) => (
             <button
               key={filter}
               onClick={() => setActiveFilter(filter)}
               className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all whitespace-nowrap ${activeFilter === filter
-                  ? 'bg-[#0ea5e9] text-white shadow-lg shadow-[#0ea5e9]/20'
-                  : 'text-slate-500 hover:text-white hover:bg-white/5'
+                ? 'bg-[#0ea5e9] text-white shadow-lg shadow-[#0ea5e9]/20'
+                : 'text-slate-500 hover:text-white hover:bg-white/5'
                 }`}
             >
               {filter}
