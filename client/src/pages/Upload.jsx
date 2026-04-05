@@ -15,7 +15,7 @@ const Upload = () => {
   };
 
   return (
-    <div className="container mx-auto max-h-screen">
+    <div className="container mx-auto px-4">
       <div className="max-w-2xl mx-auto space-y-8">
         <div>
           <Link to="/my-files" className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-[#0ea5e9] transition-colors mb-6 group">
