@@ -1,0 +1,143 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  CloudShare Serverless Backend
+  Infrastructure as Code (IaC) for AWS SAM
+
+Globals:
+  Function:
+    Timeout: 15
+    MemorySize: 128
+    Runtime: python3.12
+    Environment:
+      Variables:
+        BUCKET_NAME: cloudshare-storage-rohit
+
+Resources:
+  # --- S3 Storage ---
+  CloudShareBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: cloudshare-storage-rohit
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders: ['*']
+            AllowedMethods: [GET, POST, PUT, DELETE]
+            AllowedOrigins: ['*']
+            ExposeHeaders: [ETag]
+
+  # --- API Gateway ---
+  CloudShareAPI:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+      Cors:
+        AllowMethods: "'GET,POST,DELETE,OPTIONS'"
+        AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+        AllowOrigin: "'*'"
+
+  # --- Lambda Functions ---
+  
+  UploadFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./lambda_files/
+      Handler: UploadFunction.lambda_handler
+      Policies:
+        - S3CrudPolicy:
+            BucketName: cloudshare-storage-rohit
+      Events:
+        UploadApi:
+          Type: Api
+          Properties:
+            Path: /upload
+            Method: get
+            RestApiId: !Ref CloudShareAPI
+
+  DownloadFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./lambda_files/
+      Handler: DownloadFunction.lambda_handler
+      Policies:
+        - S3ReadOnlyPolicy:
+            BucketName: cloudshare-storage-rohit
+      Events:
+        DownloadApi:
+          Type: Api
+          Properties:
+            Path: /download
+            Method: get
+            RestApiId: !Ref CloudShareAPI
+
+  ListFilesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./lambda_files/
+      Handler: ListFilesFunction.lambda_handler
+      Policies:
+        - S3ReadOnlyPolicy:
+            BucketName: cloudshare-storage-rohit
+      Events:
+        ListFilesApi:
+          Type: Api
+          Properties:
+            Path: /files
+            Method: get
+            RestApiId: !Ref CloudShareAPI
+
+  DeleteFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./lambda_files/
+      Handler: DeleteFunction.lambda_handler
+      Policies:
+        - S3CrudPolicy:
+            BucketName: cloudshare-storage-rohit
+      Events:
+        DeleteApi:
+          Type: Api
+          Properties:
+            Path: /files
+            Method: delete
+            RestApiId: !Ref CloudShareAPI
+
+  TogglePublicFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./lambda_files/
+      Handler: TogglePublicFunction.lambda_handler
+      Policies:
+        - S3CrudPolicy:
+            BucketName: cloudshare-storage-rohit
+      Events:
+        TogglePublicApi:
+          Type: Api
+          Properties:
+            Path: /share
+            Method: post
+            RestApiId: !Ref CloudShareAPI
+
+  ListPublicFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./lambda_files/
+      Handler: ListPublicFunction.lambda_handler
+      Policies:
+        - S3ReadOnlyPolicy:
+            BucketName: cloudshare-storage-rohit
+      Events:
+        ListPublicApi:
+          Type: Api
+          Properties:
+            Path: /public
+            Method: get
+            RestApiId: !Ref CloudShareAPI
+
+Outputs:
+  CloudShareApiUrl:
+    Description: "API Gateway endpoint URL"
+    Value: !Sub "https://${CloudShareAPI}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
+  S3BucketName:
+    Description: "S3 Bucket Name"
+    Value: !Ref CloudShareBucket
